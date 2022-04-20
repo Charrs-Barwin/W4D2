@@ -1,23 +1,19 @@
-require_relative "piece"
+require_relative "./pieces/pieces.rb"
 class Board
 
   def initialize
     @rows = Array.new(8){Array.new(8)}
 
-    placement_white=@rows[0..1]
-    placement_null = @rows[2..5]
-    placement_black = @rows[6..7]
-
-    placement_white.each do |r|
-      r.each_with_index{|s,i|s = Piece.new('white',self,i) }
+    @rows.each_with_index do |r,i|
+      if [0,1].include?(i)
+        r.each_with_index{|s,i2|self[[i,i2]] = Piece.new('white',self,[i,i2]) }
+      elsif [2,3,4,5].include?(i)
+        r.each_with_index{|s,i2|self[[i,i2]] = NullPiece.instance }
+      elsif [6,7].include?(i)
+        r.each_with_index{|s,i2|self[[i,i2]] = Piece.new('black',self,[i,i2]) }
+      end
     end
-    placement_null.each do |r|
-      r.each_with_index{|s,i|s = Piece.new('_',self,i) }
-    end
-    placement_black.each do |r|
-      r.each_with_index{|s,i|s = Piece.new('black',self,i) }
-    end
-
+    @rows[2][2] = Rook.new('white',self,[2,2])
   end
 
   def [](pos)
@@ -29,14 +25,19 @@ class Board
   end
 
 
-  def move_piece(start,end_pos) # This should update the 2D grid and also the moved piece's position
-    # raise error if; -there is no piece at start_pos, or -the piece cannot move to end_pos
+  def move_piece(start,end_pos)
+    raise "Position is out of bounds" if (start + end_pos).any?{|p|p<0 || p>7}
     _piece = self[start]
-    raise "No piece to move" if _piece.nil?
-    raise "Cannot move to this position" if pos.any?{|p|p<0 || p>7}
+    raise "No piece to move" if _piece.empty?
+	
     self[end_pos] = self[start]
-    self[start] = nil
+    self[start] = NullPiece.instance
     _piece.pos = end_pos
   end
 
 end
+
+b = Board.new
+# b.move_piece([1,1],[2,1])
+# p b
+p b[[2,2]].moves
